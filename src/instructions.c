@@ -1,12 +1,16 @@
 #include "instructions.h"
 #include "flags_makros.h"
+#include "alu.h"
+
+static int update_CZS_flags(cpu_t* cpu, uint8_t C_out);
+static int ADD_internal(cpu_t *cpu, byte_t B, uint8_t carry_in);
 
 static int update_CZS_flags(cpu_t* cpu, uint8_t C_out){
     if(!cpu) {
         return -1;
     }
 
-    // check for carry
+    // check and set carry
     if(C_out == 1u){
         S_C_FLAG(cpu->flags);
     }
@@ -14,7 +18,7 @@ static int update_CZS_flags(cpu_t* cpu, uint8_t C_out){
         DEL_C_FLAG(cpu->flags);
     }
 
-    // check for zero
+    // check and set zero
     if(cpu->A == 0u){
         S_Z_FLAG(cpu->flags);
     }
@@ -22,7 +26,7 @@ static int update_CZS_flags(cpu_t* cpu, uint8_t C_out){
         DEL_Z_FLAG(cpu->flags);
     }
 
-    // check sign
+    // check and set sign
     if(cpu->A & (1u << 7u)){
         S_S_FLAG(cpu->flags);
     }
@@ -33,73 +37,63 @@ static int update_CZS_flags(cpu_t* cpu, uint8_t C_out){
     return 0;
 }
 
-typedef struct
-{
-    unsigned int A : 1;
-    unsigned int B : 1;
-    unsigned int C_in : 1;
-
-    unsigned int C_out : 1;
-    unsigned int S : 1;
-} full_adder_t;
-
-static int full_adder_job(full_adder_t* adder){
-    if(!adder){
+static int ADD_internal(cpu_t *cpu, byte_t B, uint8_t carry_in){
+    alu_result_t alu_res = alu_add8(cpu->A, B, carry_in);
+    if(alu_res.err == 1u){
         return -1;
     }
 
-    adder->C_out = (adder->A & adder->B) | (adder->C_in & (adder->A ^ adder->B));
-    adder->S = adder->A ^ adder->C_in ^ adder->B;
+    cpu->A = alu_res.result;
+
+    if(update_CZS_flags(cpu, alu_res.C_out) != 0){
+        return -1;
+    }
+
+    if(alu_res.parity_flag == 1u){
+        S_P_FLAG(cpu->flags);
+    }
+    else{
+        DEL_P_FLAG(cpu->flags);
+    }
+
+    if(alu_res.aux_carry == 1u){
+        S_AC_FLAG(cpu->flags);
+    }
+    else{
+        DEL_AC_FLAG(cpu->flags);
+    }
 
     return 0;
 }
 
-static int ADD_internal(cpu_t *cpu, byte_t B, uint8_t carry_in){
-        if (!cpu) {
+static int SUB_internal(cpu_t *cpu, byte_t B, uint8_t carry_in){
+    if(!cpu){
         return -1;
     }
-    
-    full_adder_t full_adder = {
-        .A = 0u,
-        .B = 0u,
-        .C_out = 0u,
-        .C_in = carry_in,
-        .S = 0u
-    };
-    
-    S_P_FLAG(cpu->flags);
 
-    for(uint8_t i = 0u; i < 8u; i++){
-        full_adder.A = (cpu->A >> i) & 1u;
-        full_adder.B = (B >> i) & 1u;
-        
-        if(full_adder_job(&full_adder) != 0){
-            return -1;
-        }
-        
-        // flip Parity for each 1
-        if(full_adder.S == 1u){
-            F_P_FLAG(cpu->flags);
-        }
-
-        // check for Auxiliary carry
-        if (i == 3u) {
-            if (full_adder.C_out){
-                S_AC_FLAG(cpu->flags);
-            }
-            else{
-                DEL_AC_FLAG(cpu->flags);
-            }
-        }
-
-        // add full adder result
-        cpu->A = (byte_t)((cpu->A & ~(1u << i)) | (full_adder.S << i));
-
-        full_adder.C_in = full_adder.C_out;
+    alu_result_t alu_res = alu_add8(cpu->A, (byte_t)(~B), carry_in);
+    if(alu_res.err == 1u){
+        return -1;
     }
 
-    if(update_CZS_flags(cpu, full_adder.C_out) != 0){
+    cpu->A = alu_res.result;
+
+    if(update_CZS_flags(cpu, !alu_res.C_out) != 0){
         return -1;
+    }
+
+    if(alu_res.parity_flag == 1u){
+        S_P_FLAG(cpu->flags);
+    }
+    else{
+        DEL_P_FLAG(cpu->flags);
+    }
+
+    if(alu_res.aux_carry == 1u){
+        S_AC_FLAG(cpu->flags);
+    }
+    else{
+        DEL_AC_FLAG(cpu->flags);
     }
 
     return 0;
@@ -119,4 +113,18 @@ int ADD(cpu_t* cpu, byte_t B){
     }
 
     return ADD_internal(cpu, B, 0u);
+}
+
+int SUB(cpu_t* cpu, byte_t B){
+    if (!cpu) {
+        return -1;
+    }
+
+    return SUB_internal(cpu, B, 1u);
+}
+
+int SBB(cpu_t *cpu, byte_t B){
+    uint8_t borrow = R_C_FLAG(cpu->flags);
+
+    return SUB_internal(cpu, B, !borrow);
 }

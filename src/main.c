@@ -59,16 +59,33 @@ int main(void){
     print_cpu(cpu);
 
     ADD(&cpu, 5u);
-    printf("after ADD:\n");
+    printf("after ADD 5:\n");
     print_cpu(cpu);
 
     S_C_FLAG(cpu.flags);
     printf("after setting C flag manually:\n");
     print_cpu(cpu);
 
-    ADDC(&cpu, 249);
-    printf("after ADDC:\n");
+    ADDC(&cpu, 2);
+    printf("after ADDC 2 (carry makes result = 8):\n");
     print_cpu(cpu);
+
+    SUB(&cpu, 8);
+    printf("after SUB 8 (Z flag should be 1):\n");
+    print_cpu(cpu);
+
+    ADD(&cpu, 5u);
+    printf("after ADD 5:\n");
+    print_cpu(cpu);
+
+    S_C_FLAG(cpu.flags);
+    printf("after setting C flag manually again:\n");
+    print_cpu(cpu);
+
+    SBB(&cpu, 4);
+    printf("after SBB 4 (carry makes result = 0):\n");
+    print_cpu(cpu);
+
 
     return 0;
 }
