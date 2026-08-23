@@ -54,8 +54,8 @@ static int full_adder_job(full_adder_t* adder){
     return 0;
 }
 
-int ADD(cpu_t* cpu, byte_t B){
-    if (!cpu) {
+static int ADD_internal(cpu_t *cpu, byte_t B, uint8_t carry_in){
+        if (!cpu) {
         return -1;
     }
     
@@ -63,10 +63,10 @@ int ADD(cpu_t* cpu, byte_t B){
         .A = 0u,
         .B = 0u,
         .C_out = 0u,
-        .C_in = 0u,
+        .C_in = carry_in,
         .S = 0u
     };
-
+    
     S_P_FLAG(cpu->flags);
 
     for(uint8_t i = 0u; i < 8u; i++){
@@ -103,4 +103,20 @@ int ADD(cpu_t* cpu, byte_t B){
     }
 
     return 0;
+}
+
+int ADDC(cpu_t* cpu, byte_t B){
+    if (!cpu) {
+        return -1;
+    }
+
+    return ADD_internal(cpu, B, R_C_FLAG(cpu->flags));
+}
+
+int ADD(cpu_t* cpu, byte_t B){
+    if (!cpu) {
+        return -1;
+    }
+
+    return ADD_internal(cpu, B, 0u);
 }

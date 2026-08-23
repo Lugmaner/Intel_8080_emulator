@@ -2,6 +2,7 @@
 #include "types.h"
 #include "stdio.h"
 #include "instructions.h"
+#include "flags_makros.h"
 
 void print_register(byte_t reg){
     for(uint8_t i = 0u; (i < sizeof(reg) || i < 8u); i++){
@@ -59,6 +60,14 @@ int main(void){
 
     ADD(&cpu, 5u);
     printf("after ADD:\n");
+    print_cpu(cpu);
+
+    S_C_FLAG(cpu.flags);
+    printf("after setting C flag manually:\n");
+    print_cpu(cpu);
+
+    ADDC(&cpu, 249);
+    printf("after ADDC:\n");
     print_cpu(cpu);
 
     return 0;
