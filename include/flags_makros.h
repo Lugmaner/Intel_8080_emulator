@@ -1,5 +1,5 @@
-#ifndef FLAGS_OPS_H
-#define FLAGS_OPS_H
+#ifndef FLAGS_MAKROS_H
+#define FLAGS_MAKROS_H
 
 //  read flags
 #define R_S_FLAG(x) (x & (1u << 7u))
