@@ -5,12 +5,12 @@
 
 typedef struct
 {
-    unsigned int A : 1;
-    unsigned int B : 1;
-    unsigned int C_in : 1;
+    uint8_t A;
+    uint8_t B;
+    uint8_t C_in;
 
-    unsigned int C_out : 1;
-    unsigned int S : 1;
+    uint8_t C_out;
+    uint8_t S;
 } full_adder_t;
 
 typedef struct {

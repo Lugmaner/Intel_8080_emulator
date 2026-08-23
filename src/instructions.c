@@ -124,6 +124,9 @@ int SUB(cpu_t* cpu, byte_t B){
 }
 
 int SBB(cpu_t *cpu, byte_t B){
+    if(!cpu){
+        return -1;
+    }
     uint8_t borrow = R_C_FLAG(cpu->flags);
 
     return SUB_internal(cpu, B, !borrow);
