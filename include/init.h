@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-int init_status_register(byte_t* flags);
+int init_registers(cpu_t* cpu);
 
 #endif

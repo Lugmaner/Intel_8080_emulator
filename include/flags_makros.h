@@ -22,4 +22,11 @@
 #define DEL_P_FLAG(x) (x &= ~(1u << 2u))
 #define DEL_C_FLAG(x) (x &= ~1u)
 
+// flip falgs
+#define F_S_FLAG(x) (x  ^= (1u << 7u))
+#define F_Z_FLAG(x) (x  ^= (1u << 6u))
+#define F_AC_FLAG(x) (x ^= (1u << 4u))
+#define F_P_FLAG(x) (x  ^= (1u << 2u))
+#define F_C_FLAG(x) (x  ^= 1u)
+
 #endif
