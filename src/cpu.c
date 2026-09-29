@@ -6,17 +6,6 @@
 
 #define GPR_NUM 13u
 
-typedef uint32_t reg_t;
-
-typedef enum {
-    CPU_OK,
-    CPU_ERR_NULL_ARGUMENT,
-    CPU_ERR_ALREADY_INITIATED,
-    CPU_ERR_MEM_ALLOCATION,
-    CPU_ERR_ALU_CREATION,
-    CPU_ERR_ALU_DESTROY
-} cpu_err_t;
-
 struct cpu
 {
     reg_t r[GPR_NUM];
@@ -37,12 +26,11 @@ struct cpu
                         1: M1,
                         0: M0
                 */
-    alu_t* const alu;
+    alu_t* alu;
 };
 
 cpu_err_t create_cpu(cpu_t** out_cpu, alu_err_t* out_alu_err){
     if(!out_cpu){
-        *out_cpu = NULL;
         return CPU_ERR_NULL_ARGUMENT;
     }
 
@@ -53,7 +41,7 @@ cpu_err_t create_cpu(cpu_t** out_cpu, alu_err_t* out_alu_err){
     *out_cpu = NULL;
 
     alu_t* new_alu = NULL;
-    alu_err_t err = create_new_alu(&new_alu);
+    alu_err_t err = create_alu(&new_alu);
     if(err != ALU_OK){
         *out_alu_err = err;
         return CPU_ERR_ALU_CREATION;
@@ -66,6 +54,8 @@ cpu_err_t create_cpu(cpu_t** out_cpu, alu_err_t* out_alu_err){
         destroy_alu(&new_alu);
         return CPU_ERR_MEM_ALLOCATION;
     }
+
+    new_cpu->alu = new_alu;
 
     *out_cpu = new_cpu;
 
@@ -109,6 +99,30 @@ void print_cpu(const cpu_t* in_cpu){
     printf("cpsr: 0x%08" PRIX32 "\n", in_cpu->cpsr);
 
     printf("alu is valid = %s", in_cpu->alu != NULL ? "true" : "false");
+}
 
-    return CPU_OK;
+void print_cpu_err(cpu_err_t in_err){
+    switch (in_err)
+    {
+    case CPU_OK:
+        printf("CPU OK\n");
+        break;
+    case CPU_ERR_NULL_ARGUMENT:
+        printf("CPU ERR (NULL ARGUMENT)\n");
+        break;
+    case CPU_ERR_ALREADY_INITIATED:
+        printf("CPU ERR (ALREADY INITIATED)\n");
+        break;
+    case CPU_ERR_MEM_ALLOCATION:
+        printf("CPU ERR (FAILED TO ALLOCATE MEMMORY)\n");
+        break;
+    case CPU_ERR_ALU_CREATION:
+        printf("CPU ERR (ALU ERR, PLS CHECK ALU ERR CODE)\n");
+        break;
+    case CPU_ERR_ALU_DESTROY:
+        printf("CPU ERR (ALU ERR, PLS CHECK ALU ERR CODE)\n");
+        break;
+    default:
+        break;
+    }
 }
